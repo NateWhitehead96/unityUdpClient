@@ -271,6 +271,10 @@ MonoBehaviour:
         B: 0
       spawned: 0
       playerObject: {fileID: 0}
+      position:
+        X: 0
+        Y: 0
+        Z: 0
   lastestGameState:
     players: []
 --- !u!1 &963194225

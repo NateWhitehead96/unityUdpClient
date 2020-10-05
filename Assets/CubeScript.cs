@@ -1,14 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.Text;
+using System.Net.Sockets;
+using System.Net;
 
 public class CubeScript : MonoBehaviour
 {
     [SerializeField]
     GameObject cube;
 
-    void Spawn()
+    public UdpClient udp;
+
+    //Transform transform;
+    public Vector3 cubePosition = new Vector3(0, 0, 0);
+    void Start()
     {
-        Instantiate(cube, new Vector3(0, 0, 0), Quaternion.identity);
+        //transform = GetComponent<Transform>();
+    }
+    void Update()
+    {
+        // only updating cube's position
+        transform.position = cubePosition;
     }
 }

@@ -20,8 +20,8 @@ public class NetworkMan : MonoBehaviour
     {
         udp = new UdpClient();
 
-        udp.Connect("localhost", 12345);
-        //udp.Connect("3.129.208.0", 12345);
+        //udp.Connect("localhost", 12345);
+        udp.Connect("3.129.208.0", 12345);
 
         Byte[] sendBytes = Encoding.ASCII.GetBytes("connect");
       
@@ -30,6 +30,7 @@ public class NetworkMan : MonoBehaviour
         udp.BeginReceive(new AsyncCallback(OnReceived), udp);
 
         InvokeRepeating("HeartBeat", 1, 1);
+
     }
 
     void OnDestroy(){
@@ -59,7 +60,15 @@ public class NetworkMan : MonoBehaviour
         public string id;
         public receivedColor color;
         public bool spawned = false;
-        public GameObject playerObject;
+        public GameObject playerObject = null;
+        [Serializable]
+        public struct recievedPosition
+        {
+            public float X;
+            public float Y;
+            public float Z;
+        }
+        public recievedPosition position;
     }
 
     [Serializable]
@@ -141,6 +150,7 @@ public class NetworkMan : MonoBehaviour
             if (player.spawned == false) // do the spawn
             {
                 spawnedObject = Instantiate(prefab, new Vector3(UnityEngine.Random.Range(-5, 5), 0, 0), Quaternion.identity);
+                spawnedObject.GetComponent<CubeScript>().udp = udp; // getting a reference of udp for client
                 player.playerObject = spawnedObject;
                 player.spawned = true;
                 //Debug.Log(lastestGameState.players.Length);
@@ -165,7 +175,16 @@ public class NetworkMan : MonoBehaviour
                     Renderer renderer = player.playerObject.GetComponent<Renderer>();
                     player.color = lastestGameState.players[i].color;
                     renderer.material.color = new Color(player.color.R, player.color.G, player.color.B);
+                    player.playerObject.GetComponent<CubeScript>().cubePosition = new Vector3(lastestGameState.players[i].position.X, lastestGameState.players[i].position.Y, lastestGameState.players[i].position.Z); // setting position of player to last passed in position
+                    
+                    //player.position = lastestGameState.players[i].position;
+                    //Vector3 newPos = new Vector3(player.position.X, player.position.Y, player.position.Z);
+
+                    //player.playerObject.transform = new Vector3(newPos);
+
+                    
                 }
+                
             }
             
         }
@@ -186,5 +205,31 @@ public class NetworkMan : MonoBehaviour
         SpawnPlayers();
         UpdatePlayers();
         DestroyPlayers();
+
+        // Input being sent to server by commands. Server will read and send out new position to player based on input
+        if (Input.GetKey("w")) // if moving back in the world
+        {
+            //transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + speed * Time.deltaTime);
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("moveBackward");
+            udp.Send(sendBytes, sendBytes.Length);
+        }
+        else if (Input.GetKey("s")) // moving forward in the world
+        {
+            //transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z - speed * Time.deltaTime);
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("moveForward");
+            udp.Send(sendBytes, sendBytes.Length);
+        }
+        else if (Input.GetKey("a")) // moving left in the world
+        {
+            //transform.position = new Vector3(transform.position.x - speed * Time.deltaTime, transform.position.y, transform.position.z);
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("moveLeft");
+            udp.Send(sendBytes, sendBytes.Length);
+        }
+        else if (Input.GetKey("d")) // moving right in the world
+        {
+            //transform.position = new Vector3(transform.position.x + speed * Time.deltaTime, transform.position.y, transform.position.z);
+            Byte[] sendBytes = Encoding.ASCII.GetBytes("moveRight");
+            udp.Send(sendBytes, sendBytes.Length);
+        }
     }
 }
